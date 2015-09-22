@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/url"
@@ -45,8 +46,9 @@ func (s *SlotStatus) SplitInquiryData(inquiry string) {
 }
 
 func (s *SlotStatus) Document() goes.Document {
+	y, m, d := time.Now().Date()
 	return goes.Document{
-		Index: *index,
+		Index: fmt.Sprintf("%s-%d.%02d.%02d", *index, y, m, d),
 		Type:  *es_type,
 		Fields: map[string]interface{}{
 			"@timestamp":        time.Now(),
