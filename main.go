@@ -46,6 +46,7 @@ func (s *SlotStatus) Document() goes.Document {
 		Index: *index,
 		Type:  *es_type,
 		Fields: map[string]interface{}{
+			"@timestamp":        time.Now(),
 			"slot_number":       s.Number,
 			"media_error_count": s.MediaErrorCount,
 			"other_error_count": s.OtherErrorCount,
@@ -128,9 +129,9 @@ func main() {
 				slot.State = value
 			case "Drive has flagged a S.M.A.R.T alert":
 				if value == "No" {
-					slot.SmartAlert = true
-				} else {
 					slot.SmartAlert = false
+				} else {
+					slot.SmartAlert = true
 				}
 
 			}
