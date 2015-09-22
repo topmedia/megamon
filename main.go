@@ -35,10 +35,13 @@ type SlotStatus struct {
 }
 
 func (s *SlotStatus) SplitInquiryData(inquiry string) {
-	fields := strings.Fields(strings.Split(inquiry, ":")[1])
+	data := strings.Split(inquiry, ":")[1]
+	fields := strings.Fields(data)
 	s.SerialNumber = fields[0]
-	s.ModelNumber = fields[1]
-	s.FirmwareVersion = fields[2]
+	s.FirmwareVersion = fields[len(fields)-1]
+	s.ModelNumber = strings.TrimSpace(
+		strings.Replace(strings.Replace(data, s.SerialNumber, "", -1),
+			s.FirmwareVersion, "", -1))
 }
 
 func (s *SlotStatus) Document() goes.Document {
@@ -136,6 +139,9 @@ func main() {
 
 			}
 		}
+
+		// Append last slot
+		slots = append(slots, slot)
 
 		for _, s := range slots {
 			_, err = es.Index(s.Document(), url.Values{})
