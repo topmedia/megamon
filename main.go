@@ -16,12 +16,13 @@ import (
 )
 
 var (
-	interval    = flag.String("interval", "5m", "Reporting interval")
-	index       = flag.String("index", "euronas", "Elasticsearch index to write to")
-	es_type     = flag.String("type", "euronas", "Elasticsearch type to use")
-	destination = flag.String("destination", "localhost:9200", "Output destination")
-	cli_path    = flag.String("cli", "/opt/MegaRAID/MegaCli/MegaCli64", "Location of the MegaCli binary")
-	matcher     = regexp.MustCompile(`^(Slot Number|Inquiry Data|Media Error Count|Other Error Count|Firmware state|Drive has flagged a S.M.A.R.T alert ):`)
+	interval       = flag.String("interval", "5m", "Reporting interval")
+	index          = flag.String("index", "euronas", "Elasticsearch index to write to")
+	es_type        = flag.String("type", "euronas", "Elasticsearch type to use")
+	destination    = flag.String("destination", "localhost:9200", "Output destination")
+	cli_path       = flag.String("cli", "/opt/MegaRAID/MegaCli/MegaCli64", "Location of the MegaCli binary")
+	line_matcher   = regexp.MustCompile(`^(Slot Number|Inquiry Data|Media Error Count|Other Error Count|Firmware state|Drive has flagged a S.M.A.R.T alert ):`)
+	serial_matcher = regexp.MustCompile(`(\w+)(ST\d000[\w-]+)`)
 )
 
 type SlotStatus struct {
@@ -38,7 +39,15 @@ type SlotStatus struct {
 func (s *SlotStatus) SplitInquiryData(inquiry string) {
 	data := strings.Split(inquiry, ":")[1]
 	fields := strings.Fields(data)
-	s.SerialNumber = fields[0]
+
+	if len(fields) < 3 {
+		if sm := serial_matcher.FindAllStringSubmatch(fields[0], -1); sm != nil {
+			s.SerialNumber = sm[0][1]
+		}
+	} else {
+		s.SerialNumber = fields[0]
+	}
+
 	s.FirmwareVersion = fields[len(fields)-1]
 	s.ModelNumber = strings.TrimSpace(
 		strings.Replace(strings.Replace(data, s.SerialNumber, "", -1),
@@ -108,7 +117,7 @@ func main() {
 		)
 
 		for _, l := range regexp.MustCompile("\r?\n").Split(string(out), -1) {
-			if !matcher.Match([]byte(l)) {
+			if !line_matcher.MatchString(l) {
 				continue
 			}
 
