@@ -13,5 +13,5 @@ an Elasticsearch instance.
                 Elasticsearch index to write to (default "euronas")
           -interval string
                 Reporting interval (default "5m")
-          -type string
-                Elasticsearch type to use (default "euronas")
+          -shipper string
+                Value of the shipper field to use (default "euronas")

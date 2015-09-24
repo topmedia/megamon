@@ -18,7 +18,7 @@ import (
 var (
 	interval       = flag.String("interval", "5m", "Reporting interval")
 	index          = flag.String("index", "euronas", "Elasticsearch index to write to")
-	es_type        = flag.String("type", "euronas", "Elasticsearch type to use")
+	shipper        = flag.String("shipper", "euronas", "Value of the shipper field to use")
 	destination    = flag.String("destination", "localhost:9200", "Output destination")
 	cli_path       = flag.String("cli", "/opt/MegaRAID/MegaCli/MegaCli64", "Location of the MegaCli binary")
 	line_matcher   = regexp.MustCompile(`^(Slot Number|Inquiry Data|Media Error Count|Other Error Count|Firmware state|Drive has flagged a S.M.A.R.T alert ):`)
@@ -58,9 +58,10 @@ func (s *SlotStatus) Document() goes.Document {
 	y, m, d := time.Now().Date()
 	return goes.Document{
 		Index: fmt.Sprintf("%s-%d.%02d.%02d", *index, y, m, d),
-		Type:  *es_type,
+		Type:  "megamon",
 		Fields: map[string]interface{}{
 			"@timestamp":        time.Now(),
+			"shipper":           *shipper,
 			"slot_number":       s.Number,
 			"media_error_count": s.MediaErrorCount,
 			"other_error_count": s.OtherErrorCount,
